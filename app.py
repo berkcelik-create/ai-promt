@@ -4,9 +4,6 @@ import os
 
 # --- AYARLAR ---
 DATA_FILE = "promptlar.json"
-DATA_DIR = "data"
-
-if not os.path.exists(DATA_DIR): os.makedirs(DATA_DIR)
 
 def veri_yukle():
     if os.path.exists(DATA_FILE):
@@ -21,32 +18,41 @@ def veri_kaydet(data):
 if 'prompt_listesi' not in st.session_state:
     st.session_state.prompt_listesi = veri_yukle()
 
-# --- ADMIN PANELİ ---
+# --- ÜYE / ADMIN PANELİ ---
 with st.sidebar:
-    st.header("⚙️ Admin Paneli")
-    if st.text_input("Şifre:", type="password") == "admin123":
-        st.subheader("Yeni Prompt Ekle")
-        yeni_baslik = st.text_input("Başlık")
-        yeni_kategori = st.selectbox("Kategori", ["Yazılım", "Tasarım", "Pazarlama", "Eğitim"])
-        yeni_prompt = st.text_area("Prompt İçeriği")
+    st.header("👤 Üye Girişi / Paylaşım")
+    kullanici = st.text_input("Kullanıcı Adı:")
+    sifre = st.text_input("Şifre:", type="password")
+    
+    if sifre == "uye123": # Basit üyelik şifresi
+        st.success(f"Hoş geldin, {kullanici}!")
+        st.subheader("Prompt Paylaş")
+        yeni_baslik = st.text_input("Prompt Başlığı")
+        yeni_kat = st.selectbox("Kategori", ["Yazılım", "Tasarım", "Pazarlama", "Eğitim"])
+        yeni_prompt = st.text_area("İçerik")
         
-        if st.button("Kaydet"):
+        if st.button("Sitede Yayınla"):
             st.session_state.prompt_listesi.append({
-                "baslik": yeni_baslik, "kategori": yeni_kategori, "prompt": yeni_prompt
+                "yazar": kullanici, "baslik": yeni_baslik, "kategori": yeni_kat, "prompt": yeni_prompt
             })
             veri_kaydet(st.session_state.prompt_listesi)
-            st.success("Kaydedildi!")
+            st.rerun()
+    else:
+        st.info("İçerik paylaşmak için giriş yap.")
 
 # --- ANA EKRAN ---
-st.title("🚀 AI Prompt Kütüphanesi")
+st.title("🚀 Topluluk Prompt Kütüphanesi")
+# Arama Çubuğu
+arama = st.text_input("🔍 Prompt ara...")
 
-# Kategori Filtresi
-kategoriler = ["Tümü"] + list(set(p['kategori'] for p in st.session_state.prompt_listesi))
-secilen_filtre = st.selectbox("Kategoriye Göre Filtrele:", kategoriler)
+# Kategori Filtreleme
+katlar = ["Tümü"] + list(set(p['kategori'] for p in st.session_state.prompt_listesi))
+filtre = st.selectbox("Kategori Seç:", katlar)
 
-# Gösterim
 for item in st.session_state.prompt_listesi:
-    if secilen_filtre == "Tümü" or item["kategori"] == secilen_filtre:
+    # Arama ve Filtreleme Mantığı
+    if (filtre == "Tümü" or item["kategori"] == filtre) and (arama.lower() in item["baslik"].lower()):
         with st.container(border=True):
-            st.markdown(f"**{item['baslik']}** | *{item['kategori']}*")
+            st.subheader(item["baslik"])
+            st.caption(f"Yazar: {item['yazar']} | Kategori: {item['kategori']}")
             st.code(item["prompt"])
