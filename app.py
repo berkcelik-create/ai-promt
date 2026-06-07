@@ -84,3 +84,29 @@ for item in st.session_state.prompt_listesi:
             st.subheader(item.get('baslik', 'Başlıksız'))
             st.caption(f"Yazar: {item.get('yazar')} | Kategori: {item.get('kategori')}")
             st.code(item.get('prompt', ''))
+# --- LİSTELEME ---
+st.title("🚀 Yapay Zeka Destekli Kütüphane")
+
+# Arama ve Filtreleme
+arama = st.text_input("🔍 Prompt ara...")
+kategoriler = ["Tümü"] + list(set(p.get('kategori', 'Genel') for p in st.session_state.prompt_listesi))
+filtre = st.selectbox("Kategori Seç:", kategoriler)
+
+# Admin mi kontrolü
+is_admin = False
+if "admin_id" in st.session_state and st.session_state.admin_id == "admin":
+    is_admin = True
+
+for i, item in enumerate(st.session_state.prompt_listesi):
+    if (filtre == "Tümü" or item.get('kategori') == filtre) and (arama.lower() in item.get('baslik', '').lower()):
+        with st.container(border=True):
+            st.subheader(item.get('baslik', 'Başlıksız'))
+            st.caption(f"Yazar: {item.get('yazar')} | Kategori: {item.get('kategori')}")
+            st.code(item.get('prompt', ''))
+            
+            # ADMIN İÇİN SİLME BUTONU
+            if is_admin:
+                if st.button(f"🗑️ Sil: {item.get('baslik')}", key=f"sil_{i}"):
+                    st.session_state.prompt_listesi.pop(i)
+                    veri_kaydet(DATA_FILE, st.session_state.prompt_listesi)
+                    st.rerun()
