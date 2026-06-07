@@ -3,64 +3,63 @@ import json
 import os
 
 DATA_FILE = "promptlar.json"
+USER_FILE = "kullanicilar.json"
 
-def veri_yukle():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+def veri_yukle(dosya):
+    if os.path.exists(dosya):
+        with open(dosya, "r", encoding="utf-8") as f: return json.load(f)
+    return {} if dosya == USER_FILE else []
 
-def veri_kaydet(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+def veri_kaydet(dosya, data):
+    with open(dosya, "w", encoding="utf-8") as f: json.dump(data, f, indent=4)
 
-if 'prompt_listesi' not in st.session_state:
-    st.session_state.prompt_listesi = veri_yukle()
+if 'prompt_listesi' not in st.session_state: st.session_state.prompt_listesi = veri_yukle(DATA_FILE)
+if 'kullanicilar' not in st.session_state: st.session_state.kullanicilar = veri_yukle(USER_FILE)
+if 'giris_yapti' not in st.session_state: st.session_state.giris_yapti = False
 
-# --- PANEL SİSTEMİ ---
+# --- YAN PANEL: GİRİŞ/KAYIT ---
 with st.sidebar:
-    st.header("🔐 Giriş Panelleri")
-    
-    # Üye Paneli
-    with st.expander("👤 Üye Girişi (İçerik Paylaş)"):
-        u_kullanici = st.text_input("Üye Adı:")
-        u_sifre = st.text_input("Üye Şifre:", type="password")
-        if u_sifre == "uye123":
-            y_baslik = st.text_input("Başlık")
-            y_kat = st.selectbox("Kategori", ["Yazılım", "Tasarım", "Pazarlama", "Eğitim"])
-            y_prompt = st.text_area("Prompt İçeriği")
-            if st.button("Paylaş"):
-                st.session_state.prompt_listesi.append({
-                    "yazar": u_kullanici, "kategori": y_kat, "baslik": y_baslik, "prompt": y_prompt
-                })
-                veri_kaydet(st.session_state.prompt_listesi)
-                st.rerun()
+    st.header("🔑 Hesap İşlemleri")
+    if not st.session_state.giris_yapti:
+        secim = st.radio("İşlem:", ["Giriş Yap", "Kayıt Ol"])
+        kullanici = st.text_input("Kullanıcı Adı")
+        sifre = st.text_input("Şifre", type="password")
+        
+        if secim == "Kayıt Ol":
+            if st.button("Kayıt Ol"):
+                if kullanici in st.session_state.kullanicilar: st.error("Bu kullanıcı zaten var!")
+                else:
+                    st.session_state.kullanicilar[kullanici] = sifre
+                    veri_kaydet(USER_FILE, st.session_state.kullanicilar)
+                    st.success("Kayıt başarılı! Şimdi giriş yapabilirsin.")
+        else:
+            if st.button("Giriş Yap"):
+                if st.session_state.kullanicilar.get(kullanici) == sifre:
+                    st.session_state.giris_yapti = True
+                    st.session_state.aktif_kullanici = kullanici
+                    st.rerun()
+                else: st.error("Hatalı bilgiler!")
+    else:
+        st.write(f"Hoş geldin, **{st.session_state.aktif_kullanici}**")
+        if st.button("Çıkış Yap"):
+            st.session_state.giris_yapti = False
+            st.rerun()
 
-    # Admin Paneli
-    with st.expander("⚙️ Admin Girişi (Tüm Yetki)"):
-        a_sifre = st.text_input("Admin Şifre:", type="password")
-        if a_sifre == "admin123":
-            st.warning("Admin modundasın.")
-            if st.button("Tüm Veriyi Sıfırla"):
-                st.session_state.prompt_listesi = []
-                veri_kaydet([])
-                st.rerun()
+# --- İÇERİK PAYLAŞIM ---
+if st.session_state.giris_yapti:
+    with st.expander("➕ Yeni Prompt Paylaş"):
+        baslik = st.text_input("Başlık")
+        kat = st.selectbox("Kategori", ["Yazılım", "Tasarım", "Pazarlama", "Eğitim"])
+        prompt = st.text_area("İçerik")
+        if st.button("Yayınla"):
+            st.session_state.prompt_listesi.append({"yazar": st.session_state.aktif_kullanici, "kategori": kat, "baslik": baslik, "prompt": prompt})
+            veri_kaydet(DATA_FILE, st.session_state.prompt_listesi)
+            st.rerun()
 
-# --- ANA EKRAN ---
+# --- LİSTELEME ---
 st.title("🚀 Yapay Zeka Destekli Kütüphane")
-arama = st.text_input("🔍 Prompt ara...")
-kategoriler = ["Tümü"] + list(set(p.get('kategori', 'Genel') for p in st.session_state.prompt_listesi))
-filtre = st.selectbox("Kategori Seç:", kategoriler)
-
 for item in st.session_state.prompt_listesi:
-    # Hata almamak için .get() metodu kullanıldı
-    yazar = item.get('yazar', 'Anonim')
-    kat = item.get('kategori', 'Genel')
-    baslik = item.get('baslik', 'Başlıksız')
-    prompt = item.get('prompt', '')
-    
-    if (filtre == "Tümü" or kat == filtre) and (arama.lower() in baslik.lower()):
-        with st.container(border=True):
-            st.subheader(baslik)
-            st.caption(f"Yazar: {yazar} | Kategori: {kat}")
-            st.code(prompt)
+    with st.container(border=True):
+        st.subheader(item.get('baslik', 'Başlıksız'))
+        st.caption(f"Yazar: {item.get('yazar')} | Kategori: {item.get('kategori')}")
+        st.code(item.get('prompt', ''))
