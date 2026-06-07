@@ -74,13 +74,12 @@ with st.sidebar:
             st.rerun()
 
 # --- ANA EKRAN ---
-st.title("🚀 Prompt Engine v2.0")
+st.title("🚀 Prompt Engine v2.1")
 
-# İstatistikler
-col1, col2, col3 = st.columns(3)
+# İstatistikler (Üye sayısı kaldırıldı, 2 sütunlu düzen)
+col1, col2 = st.columns(2)
 col1.metric("Toplam İstem", len(st.session_state.prompt_listesi))
-col2.metric("Üye Sayısı", len(st.session_state.kullanicilar))
-col3.metric("Kategori", len(set(p.get('kategori') for p in st.session_state.prompt_listesi)))
+col2.metric("Kategori Sayısı", len(set(p.get('kategori') for p in st.session_state.prompt_listesi)))
 
 if st.session_state.giris_yapti:
     with st.expander("➕ Yeni İstem (Prompt) Paylaş"):
