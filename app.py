@@ -2,30 +2,51 @@ import streamlit as st
 import json
 import os
 
-# --- PREMIUM GLASSMORPHISM TASARIM ---
+# --- PREMIUM DASHBOARD TASARIM ---
 st.markdown("""
     <style>
     .stApp {
-        background: radial-gradient(circle at 10% 20%, rgb(0, 0, 0) 0%, rgb(40, 40, 60) 90%);
-        color: #e0e0e0;
+        background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
+        color: #f8fafc;
     }
+    /* Kartların Premium Cam Görünümü */
     [data-testid="stVerticalBlock"] [data-testid="stContainer"] {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(30, 41, 59, 0.6);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 20px;
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
-    h1, h2, h3 { color: #ffffff !important; }
+    /* Başlıklar */
+    h1 { color: #38bdf8 !important; text-align: center; margin-bottom: 30px; }
+    h2, h3 { color: #e2e8f0 !important; }
+    
+    /* Butonlar - Modern Neon Gradient */
     .stButton>button {
-        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
-        color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s;
+        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
     }
-    .stButton>button:hover { transform: scale(1.05); box-shadow: 0px 0px 15px rgba(37, 117, 252, 0.6); }
+    .stButton>button:hover {
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+        transform: translateY(-2px);
+    }
+    /* Input Alanları */
+    .stTextInput>div>div>input, .stTextArea textarea {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        border: 1px solid #334155 !important;
+        color: white !important;
+        border-radius: 10px !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- VERİ YÖNETİMİ ---
+# --- VERİ VE MANTIKSAL YAPI (Aynı kalıyor) ---
 DATA_FILE = "promptlar.json"
 USER_FILE = "kullanicilar.json"
 
@@ -43,13 +64,13 @@ if 'giris_yapti' not in st.session_state: st.session_state.giris_yapti = False
 
 # --- YAN PANEL ---
 with st.sidebar:
-    st.header("🔑 Hesap Paneli")
+    st.title("⚙️ Dashboard")
     if not st.session_state.giris_yapti:
         secim = st.radio("İşlem:", ["Giriş Yap", "Kayıt Ol"], key="radio_giris")
         kullanici = st.text_input("Kullanıcı Adı", key="u_ad")
         sifre = st.text_input("Şifre", type="password", key="u_sifre")
         if secim == "Kayıt Ol" and st.button("Kayıt Ol", key="btn_kayit"):
-            if kullanici in st.session_state.kullanicilar: st.error("Bu kullanıcı zaten var!")
+            if kullanici in st.session_state.kullanicilar: st.error("Zaten var!")
             else:
                 st.session_state.kullanicilar[kullanici] = sifre
                 veri_kaydet(USER_FILE, st.session_state.kullanicilar)
@@ -59,7 +80,6 @@ with st.sidebar:
                 st.session_state.giris_yapti = True
                 st.session_state.aktif_kullanici = kullanici
                 st.rerun()
-            else: st.error("Hatalı bilgiler!")
     else:
         st.write(f"Hoş geldin, **{st.session_state.aktif_kullanici}**")
         if st.button("Çıkış Yap", key="btn_cikis"):
@@ -68,31 +88,30 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
-    st.header("👑 Admin")
+    st.subheader("👑 Admin Paneli")
     admin_id = st.text_input("Admin ID:", key="adm_id")
     admin_pw = st.text_input("Admin Şifre:", type="password", key="adm_pw")
     if admin_id == "admin" and admin_pw == "admin123":
         st.session_state.admin_id = "admin"
-        st.warning("Admin Modu Aktif")
-        if st.button("Tüm Veriyi Sıfırla", key="btn_reset"):
+        if st.button("Veriyi Sıfırla", key="btn_reset"):
             st.session_state.prompt_listesi = []
             veri_kaydet(DATA_FILE, [])
             st.rerun()
 
 # --- ANA EKRAN ---
-st.title("🚀 Yapay Zeka Destekli Kütüphane")
+st.title("🚀 Prompt Engine v1.0")
 
 if st.session_state.giris_yapti:
-    with st.expander("➕ Yeni Prompt Paylaş"):
+    with st.expander("➕ Yeni İstem (Prompt) Paylaş"):
         baslik = st.text_input("Başlık", key="y_baslik")
         kat = st.selectbox("Kategori", ["Yazılım", "Tasarım", "Pazarlama", "Eğitim"], key="y_kat")
-        prompt = st.text_area("İçerik", key="y_prompt")
-        if st.button("Yayınla", key="btn_yayinla"):
+        prompt = st.text_area("İstem İçeriği", key="y_prompt")
+        if st.button("Sistemde Yayınla", key="btn_yayinla"):
             st.session_state.prompt_listesi.append({"yazar": st.session_state.aktif_kullanici, "kategori": kat, "baslik": baslik, "prompt": prompt})
             veri_kaydet(DATA_FILE, st.session_state.prompt_listesi)
             st.rerun()
 
-arama = st.text_input("🔍 Prompt ara...", key="ana_arama")
+arama = st.text_input("🔍 İstem ara...", key="ana_arama")
 kategoriler = ["Tümü"] + list(set(p.get('kategori', 'Genel') for p in st.session_state.prompt_listesi))
 filtre = st.selectbox("Kategori Seç:", kategoriler, key="ana_filtre")
 
