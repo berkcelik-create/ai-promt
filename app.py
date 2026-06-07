@@ -2,20 +2,26 @@ import streamlit as st
 import json
 import os
 
-# --- PREMIUM TASARIM & CSS ---
+# --- PREMIUM GLASSMORPHISM TASARIM ---
 st.markdown("""
     <style>
     .stApp {
-        background: linear-gradient(135deg, #1e1e2f 0%, #3a3a5a 100%);
-        color: white;
+        background: radial-gradient(circle at 10% 20%, rgb(0, 0, 0) 0%, rgb(40, 40, 60) 90%);
+        color: #e0e0e0;
     }
+    [data-testid="stVerticalBlock"] [data-testid="stContainer"] {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+    }
+    h1, h2, h3 { color: #ffffff !important; }
     .stButton>button {
-        background-color: #ff4b4b;
-        color: white;
-        border-radius: 10px;
-        border: none;
+        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s;
     }
-    .css-1r6slb0 { background-color: #2e2e48; }
+    .stButton>button:hover { transform: scale(1.05); box-shadow: 0px 0px 15px rgba(37, 117, 252, 0.6); }
     </style>
     """, unsafe_allow_html=True)
 
@@ -42,9 +48,8 @@ with st.sidebar:
         secim = st.radio("İşlem:", ["Giriş Yap", "Kayıt Ol"], key="radio_giris")
         kullanici = st.text_input("Kullanıcı Adı", key="u_ad")
         sifre = st.text_input("Şifre", type="password", key="u_sifre")
-        
         if secim == "Kayıt Ol" and st.button("Kayıt Ol", key="btn_kayit"):
-            if kullanici in st.session_state.kullanicilar: st.error("Zaten var!")
+            if kullanici in st.session_state.kullanicilar: st.error("Bu kullanıcı zaten var!")
             else:
                 st.session_state.kullanicilar[kullanici] = sifre
                 veri_kaydet(USER_FILE, st.session_state.kullanicilar)
@@ -59,6 +64,7 @@ with st.sidebar:
         st.write(f"Hoş geldin, **{st.session_state.aktif_kullanici}**")
         if st.button("Çıkış Yap", key="btn_cikis"):
             st.session_state.giris_yapti = False
+            st.session_state.admin_id = None
             st.rerun()
 
     st.divider()
