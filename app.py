@@ -2,6 +2,24 @@ import streamlit as st
 import json
 import os
 
+# --- PREMIUM TASARIM & CSS ---
+st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #1e1e2f 0%, #3a3a5a 100%);
+        color: white;
+    }
+    .stButton>button {
+        background-color: #ff4b4b;
+        color: white;
+        border-radius: 10px;
+        border: none;
+    }
+    .css-1r6slb0 { background-color: #2e2e48; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- VERİ YÖNETİMİ ---
 DATA_FILE = "promptlar.json"
 USER_FILE = "kullanicilar.json"
 
@@ -17,6 +35,7 @@ if 'prompt_listesi' not in st.session_state: st.session_state.prompt_listesi = v
 if 'kullanicilar' not in st.session_state: st.session_state.kullanicilar = veri_yukle(USER_FILE)
 if 'giris_yapti' not in st.session_state: st.session_state.giris_yapti = False
 
+# --- YAN PANEL ---
 with st.sidebar:
     st.header("🔑 Hesap Paneli")
     if not st.session_state.giris_yapti:
@@ -35,6 +54,7 @@ with st.sidebar:
                 st.session_state.giris_yapti = True
                 st.session_state.aktif_kullanici = kullanici
                 st.rerun()
+            else: st.error("Hatalı bilgiler!")
     else:
         st.write(f"Hoş geldin, **{st.session_state.aktif_kullanici}**")
         if st.button("Çıkış Yap", key="btn_cikis"):
@@ -47,11 +67,13 @@ with st.sidebar:
     admin_pw = st.text_input("Admin Şifre:", type="password", key="adm_pw")
     if admin_id == "admin" and admin_pw == "admin123":
         st.session_state.admin_id = "admin"
+        st.warning("Admin Modu Aktif")
         if st.button("Tüm Veriyi Sıfırla", key="btn_reset"):
             st.session_state.prompt_listesi = []
             veri_kaydet(DATA_FILE, [])
             st.rerun()
 
+# --- ANA EKRAN ---
 st.title("🚀 Yapay Zeka Destekli Kütüphane")
 
 if st.session_state.giris_yapti:
